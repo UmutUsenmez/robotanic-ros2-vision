@@ -2,17 +2,19 @@
 <robot name="robotanik">
   <link name="base_footprint"/>
 
+  <!-- BASE_FOOTPRINT: Dosya2'nin hesaplanan z offset'i (0.215) -->
   <joint name="base_footprint_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
     <origin xyz="0 0 0.215" rpy="0 0 0"/>
-    <!-- 0.065→0.215: zemin + tekerlek yarıçapı(0.065) + gövde yarısı(0.15) -->
+    <!-- 0.215 = zemin + tekerlek yarıçapı(0.065) + gövde yarısı(0.15) -->
   </joint>
 
+  <!-- BASE_LINK: Dosya1 geometrisi (0.325 yükseklik) + Dosya2 fizik parametreleri -->
   <link name="base_link">
     <visual>
       <geometry>
-        <box size="0.50 0.35 0.30"/>
+        <box size="0.50 0.35 0.325"/>
       </geometry>
       <material name="green">
         <color rgba="0.0 0.8 0.0 1.0"/>
@@ -20,28 +22,27 @@
     </visual>
     <collision>
       <geometry>
-        <box size="0.50 0.35 0.30"/>
+        <box size="0.50 0.35 0.325"/>
       </geometry>
     </collision>
     <inertial>
+      <!-- Dosya2'den: daha iyi navigasyon için optimize edilmiş inertia -->
       <mass value="15.0"/>
-      <inertia ixx="0.284" ixy="0" ixz="0"
-               iyy="0.542" iyz="0"
-               izz="0.638"/>
+      <inertia ixx="0.284" ixy="0" ixz="0" iyy="0.542" iyz="0" izz="0.638"/>
     </inertial>
   </link>
   <gazebo reference="base_link">
     <material>Gazebo/Green</material>
   </gazebo>
 
-  <!-- ===== ARKA SOL TEKERLEK (TAHRİKLİ) ===== -->
-  <link name="rear_left_wheel">
+  <!-- SAĞ TEKERLEK: Dosya1 link ismi + geometri + Dosya2 mu değerleri -->
+  <link name="right_wheel">
     <visual>
       <geometry>
         <cylinder radius="0.065" length="0.058"/>
       </geometry>
       <material name="black">
-        <color rgba="0.1 0.1 0.1 1.0"/>
+        <color rgba="0.0 0.0 0.0 1.0"/>
       </material>
     </visual>
     <collision>
@@ -51,69 +52,32 @@
     </collision>
     <inertial>
       <mass value="0.5"/>
-      <inertia ixx="0.001" ixy="0" ixz="0"
-               iyy="0.001" iyz="0"
-               izz="0.001"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
     </inertial>
   </link>
-  <gazebo reference="rear_left_wheel">
+  <gazebo reference="right_wheel">
     <material>Gazebo/Black</material>
+    <!-- Dosya2'den: daha iyi tutuş için artırılmış mu -->
     <mu1>1.5</mu1>
     <mu2>1.5</mu2>
   </gazebo>
 
-  <joint name="rear_left_wheel_joint" type="continuous">
+  <!-- Dosya1 joint ismi + pozisyon korundu, z -0.1525 (Dosya1 orijinal) -->
+  <joint name="right_wheel_joint" type="continuous">
     <parent link="base_link"/>
-    <child link="rear_left_wheel"/>
-    <origin xyz="-0.15 0.204 -0.15" rpy="-1.5708 0 0"/>
-    <!-- z=-0.15: gövde merkezinden tam tabana, tekerlek zeminde -->
-    <axis xyz="0 0 1"/>
-  </joint>
-
-  <!-- ===== ARKA SAĞ TEKERLEK (TAHRİKLİ) ===== -->
-  <link name="rear_right_wheel">
-    <visual>
-      <geometry>
-        <cylinder radius="0.065" length="0.058"/>
-      </geometry>
-      <material name="black">
-        <color rgba="0.1 0.1 0.1 1.0"/>
-      </material>
-    </visual>
-    <collision>
-      <geometry>
-        <cylinder radius="0.065" length="0.058"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="0.5"/>
-      <inertia ixx="0.001" ixy="0" ixz="0"
-               iyy="0.001" iyz="0"
-               izz="0.001"/>
-    </inertial>
-  </link>
-  <gazebo reference="rear_right_wheel">
-    <material>Gazebo/Black</material>
-    <mu1>1.5</mu1>
-    <mu2>1.5</mu2>
-  </gazebo>
-
-  <joint name="rear_right_wheel_joint" type="continuous">
-    <parent link="base_link"/>
-    <child link="rear_right_wheel"/>
-    <origin xyz="-0.15 -0.204 -0.15" rpy="1.5708 0 0"/>
-    <!-- z=-0.15: gövde merkezinden tam tabana -->
+    <child link="right_wheel"/>
+    <origin xyz="-0.15 -0.146 -0.1525" rpy="1.5708 0 0"/>
     <axis xyz="0 0 -1"/>
   </joint>
 
-  <!-- ===== ÖN SOL SARHOŞ TEKERLEK ===== -->
-  <link name="front_left_caster">
+  <!-- SOL TEKERLEK: Dosya1 link ismi + geometri + Dosya2 mu değerleri -->
+  <link name="left_wheel">
     <visual>
       <geometry>
         <cylinder radius="0.065" length="0.058"/>
       </geometry>
-      <material name="gray">
-        <color rgba="0.6 0.6 0.6 1.0"/>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
       </material>
     </visual>
     <collision>
@@ -122,60 +86,94 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.3"/>
-      <inertia ixx="0.0005" ixy="0" ixz="0"
-               iyy="0.0005" iyz="0"
-               izz="0.0005"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
     </inertial>
   </link>
-  <gazebo reference="front_left_caster">
-    <material>Gazebo/Grey</material>
-    <mu1>0.0</mu1>
-    <mu2>0.0</mu2>
+  <gazebo reference="left_wheel">
+    <material>Gazebo/Black</material>
+    <!-- Dosya2'den: daha iyi tutuş için artırılmış mu -->
+    <mu1>1.5</mu1>
+    <mu2>1.5</mu2>
   </gazebo>
 
-  <joint name="front_left_caster_joint" type="fixed">
+  <!-- Dosya1 joint ismi + pozisyon korundu -->
+  <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
-    <child link="front_left_caster"/>
-    <origin xyz="0.15 0.204 -0.15" rpy="-1.5708 0 0"/>
-    <!-- z=-0.15: arka tekerleklerle aynı seviye -->
+    <child link="left_wheel"/>
+    <origin xyz="-0.15 0.146 -0.1525" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
   </joint>
 
-  <!-- ===== ÖN SAĞ SARHOŞ TEKERLEK ===== -->
-  <link name="front_right_caster">
+  <!-- SAĞ CASTER: Dosya1 link ismi + orijinal sphere geometrisi korundu -->
+  <link name="right_caster_wheel">
     <visual>
       <geometry>
-        <cylinder radius="0.065" length="0.058"/>
+        <sphere radius="0.0275"/>
       </geometry>
-      <material name="gray">
-        <color rgba="0.6 0.6 0.6 1.0"/>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
       </material>
     </visual>
     <collision>
       <geometry>
-        <cylinder radius="0.065" length="0.058"/>
+        <sphere radius="0.0275"/>
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.3"/>
-      <inertia ixx="0.0005" ixy="0" ixz="0"
-               iyy="0.0005" iyz="0"
-               izz="0.0005"/>
+      <mass value="0.2"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
     </inertial>
   </link>
-  <gazebo reference="front_right_caster">
-    <material>Gazebo/Grey</material>
+  <gazebo reference="right_caster_wheel">
+    <material>Gazebo/White</material>
     <mu1>0.0</mu1>
     <mu2>0.0</mu2>
   </gazebo>
 
-  <joint name="front_right_caster_joint" type="fixed">
+  <!-- Dosya1 joint ismi + orijinal pozisyon korundu -->
+  <joint name="right_caster_joint" type="fixed">
     <parent link="base_link"/>
-    <child link="front_right_caster"/>
-    <origin xyz="0.15 -0.204 -0.15" rpy="1.5708 0 0"/>
+    <child link="right_caster_wheel"/>
+    <origin xyz="0.15 -0.10 -0.19" rpy="0 0 0"/>
   </joint>
 
-  <!-- ===== SONAR SENSÖRLER ===== -->
+  <!-- SOL CASTER: Dosya1 link ismi + orijinal sphere geometrisi korundu -->
+  <link name="left_caster_wheel">
+    <visual>
+      <geometry>
+        <sphere radius="0.0275"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.0275"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+  <gazebo reference="left_caster_wheel">
+    <material>Gazebo/White</material>
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+
+  <!-- Dosya1 joint ismi + orijinal pozisyon korundu -->
+  <joint name="left_caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="left_caster_wheel"/>
+    <origin xyz="0.15 0.10 -0.19" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== SONAR SENSÖRLER =====
+       Dosya1 link/joint isimleri + yatay pozisyonlar KORUNDU
+       Dosya2'den: z=0.05 offset (sensörler gövde üst yarısında, daha iyi algılama) -->
   <link name="sonar_front_center">
     <visual>
       <geometry><box size="0.02 0.04 0.02"/></geometry>
@@ -195,10 +193,7 @@
       <update_rate>10</update_rate>
       <ray>
         <scan>
-          <horizontal>
-            <samples>5</samples><resolution>1</resolution>
-            <min_angle>-0.26</min_angle><max_angle>0.26</max_angle>
-          </horizontal>
+          <horizontal><samples>5</samples><resolution>1</resolution><min_angle>-0.26</min_angle><max_angle>0.26</max_angle></horizontal>
         </scan>
         <range><min>0.02</min><max>4.0</max><resolution>0.01</resolution></range>
       </ray>
@@ -220,7 +215,8 @@
   <joint name="sonar_front_left_joint" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_front_left"/>
-    <origin xyz="0.20 0.175 0.05" rpy="0 0 0.785"/>
+    <!-- Dosya1 xy pozisyonu korundu, Dosya2 z=0.05 eklendi -->
+    <origin xyz="0.26 0.15 0.05" rpy="0 0 0.52"/>
   </joint>
   <gazebo reference="sonar_front_left">
     <material>Gazebo/Blue</material>
@@ -230,10 +226,7 @@
       <update_rate>10</update_rate>
       <ray>
         <scan>
-          <horizontal>
-            <samples>5</samples><resolution>1</resolution>
-            <min_angle>-0.26</min_angle><max_angle>0.26</max_angle>
-          </horizontal>
+          <horizontal><samples>5</samples><resolution>1</resolution><min_angle>-0.26</min_angle><max_angle>0.26</max_angle></horizontal>
         </scan>
         <range><min>0.02</min><max>4.0</max><resolution>0.01</resolution></range>
       </ray>
@@ -255,7 +248,8 @@
   <joint name="sonar_front_right_joint" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_front_right"/>
-    <origin xyz="0.20 -0.175 0.05" rpy="0 0 -0.785"/>
+    <!-- Dosya1 xy pozisyonu korundu, Dosya2 z=0.05 eklendi -->
+    <origin xyz="0.26 -0.15 0.05" rpy="0 0 -0.52"/>
   </joint>
   <gazebo reference="sonar_front_right">
     <material>Gazebo/Blue</material>
@@ -265,10 +259,7 @@
       <update_rate>10</update_rate>
       <ray>
         <scan>
-          <horizontal>
-            <samples>5</samples><resolution>1</resolution>
-            <min_angle>-0.26</min_angle><max_angle>0.26</max_angle>
-          </horizontal>
+          <horizontal><samples>5</samples><resolution>1</resolution><min_angle>-0.26</min_angle><max_angle>0.26</max_angle></horizontal>
         </scan>
         <range><min>0.02</min><max>4.0</max><resolution>0.01</resolution></range>
       </ray>
@@ -290,6 +281,7 @@
   <joint name="sonar_back_joint" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_back"/>
+    <!-- Dosya1 xy pozisyonu korundu, Dosya2 z=0.05 eklendi -->
     <origin xyz="-0.26 0 0.05" rpy="0 0 3.14159"/>
   </joint>
   <gazebo reference="sonar_back">
@@ -300,10 +292,7 @@
       <update_rate>10</update_rate>
       <ray>
         <scan>
-          <horizontal>
-            <samples>5</samples><resolution>1</resolution>
-            <min_angle>-0.26</min_angle><max_angle>0.26</max_angle>
-          </horizontal>
+          <horizontal><samples>5</samples><resolution>1</resolution><min_angle>-0.26</min_angle><max_angle>0.26</max_angle></horizontal>
         </scan>
         <range><min>0.02</min><max>4.0</max><resolution>0.01</resolution></range>
       </ray>
@@ -316,13 +305,15 @@
     </sensor>
   </gazebo>
 
-  <!-- ===== DIFF DRIVE PLUGIN ===== -->
+  <!-- ===== DIFF DRIVE PLUGIN =====
+       Dosya1 joint isimleri (left/right_wheel_joint) korundu
+       wheel_separation: Dosya1 orijinal 0.292 (gerçek fiziksel iz genişliği) -->
   <gazebo>
     <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
       <update_rate>30</update_rate>
-      <left_joint>rear_left_wheel_joint</left_joint>
-      <right_joint>rear_right_wheel_joint</right_joint>
-      <wheel_separation>0.408</wheel_separation>
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>0.292</wheel_separation>
       <wheel_diameter>0.130</wheel_diameter>
       <max_wheel_torque>20</max_wheel_torque>
       <max_wheel_acceleration>1.0</max_wheel_acceleration>
@@ -337,8 +328,8 @@
 
     <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
       <update_rate>30</update_rate>
-      <joint_name>rear_left_wheel_joint</joint_name>
-      <joint_name>rear_right_wheel_joint</joint_name>
+      <joint_name>left_wheel_joint</joint_name>
+      <joint_name>right_wheel_joint</joint_name>
     </plugin>
   </gazebo>
 

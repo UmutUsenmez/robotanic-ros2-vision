@@ -10,7 +10,7 @@ class CameraNode(Node):
         # Görüntüyü yayınlayacağımız konu (topic)
         self.publisher_ = self.create_publisher(Image, 'camera/image_raw', 10)
         self.timer = self.create_timer(0.1, self.timer_callback) # Saniyede 10 kare
-        self.cap = cv2.VideoCapture(0) # 0, laptopun dahili kamerasıdır
+        self.cap = cv2.VideoCapture(1) # 0, laptopun dahili kamerasıdır
         self.bridge = CvBridge()
 
     def timer_callback(self):
