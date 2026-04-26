@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String # YENİ: JSON yayınlayacağımız için String yaptık
+from std_msgs.msg import String 
 import csv
 import json 
 
@@ -8,14 +8,12 @@ class LocationSimulatorNode(Node):
     def __init__(self):
         super().__init__('location_simulator_node')
         self.publisher_ = self.create_publisher(String, 'robot/location', 10)
-
-        self.csv_file_path = '/home/aziz/Desktop/ros2_ws/src/robotanik_control/data/sim_data.csv'
+        self.csv_file_path = '/home/umut/robotanik_ws/src/robotanik_control/data/sim_data.csv'
         self.data = []
         self.current_index = 0
 
         self.load_csv()
 
-        # Excel'indeki time_s farkı 0.5 saniye olduğu için timer'ı da 0.5 yapıyoruz
         timer_period = 0.5  
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
@@ -35,14 +33,16 @@ class LocationSimulatorNode(Node):
                             'y': float(row[2]),
                             'theta': float(row[3])
                         })
-            self.get_logger().info(f'✅ Simülasyon verisi yüklendi! ({len(self.data)} konum)')
+            self.get_logger().info(f'✅ Simülasyon verisi yüklendi! ({len(self.data)} konum hazir)')
         except Exception as e:
-            self.get_logger().error(f'🚨 CSV okuma hatası: {e}')
+            self.get_logger().error(f'🚨 CSV okuma hatası: Lütfen dosya yolunu kontrol et: {e}')
 
     def timer_callback(self):
         if self.current_index < len(self.data):
             current_data = self.data[self.current_index]
+ 
             current_ros_time = self.get_clock().now().nanoseconds / 1e9
+            
             loc_data = {
                 "time": current_ros_time, 
                 "x": current_data['x'],
@@ -56,6 +56,7 @@ class LocationSimulatorNode(Node):
             
             self.current_index += 1
         else:
+            # Liste bittiğinde başa sararak sonsuz döngü yaratır
             self.current_index = 0 
 
 def main(args=None):
