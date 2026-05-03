@@ -10,7 +10,7 @@ from rclpy.action import ActionClient
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 
 from geometry_msgs.msg import PoseStamped, Twist
-from std_msgs.msg import Float64  # ŞEFİN DÜZELTMESİ: Range yerine Float64 eklendi!
+from std_msgs.msg import Float64  
 from nav2_msgs.action import NavigateToPose
 from tf2_ros import Buffer, TransformListener
 
@@ -37,7 +37,7 @@ def yaw_to_quaternion(yaw: float):
 class RobotanikRowFSM(Node):
     def __init__(self):
         super().__init__("robotanik_row_fsm")
-        self.get_logger().info("### ROBOTANIK FSM V11 BAŞLADI (FLOAT64 KÖPRÜSÜ AKTİF) ###")
+        self.get_logger().info("### ROBOTANIK FSM V13.2 (ÖRÜMCEK ADAM ÖNLEYİCİ) BAŞLADI ###")
 
         self.nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self.cmd_pub    = self.create_publisher(Twist, "/cmd_vel", 10)
@@ -52,7 +52,7 @@ class RobotanikRowFSM(Node):
         self.front_right  = None
         self.back         = None
 
-        # V10/V11: Gazebo sonar publisher'ları BEST_EFFORT yayınlıyor
+        # Gazebo BEST_EFFORT yayınlıyor, QoS eşleşmeli
         sonar_qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             history=HistoryPolicy.KEEP_LAST,
@@ -60,16 +60,16 @@ class RobotanikRowFSM(Node):
             durability=DurabilityPolicy.VOLATILE
         )
 
-        # ŞEFİN DÜZELTMESİ: RangeMsg yerine Float64 ile abone oluyoruz!
+        # Float64 ile abone oluyoruz
         self.create_subscription(Float64, "/sonar/front_center", self.front_center_cb, sonar_qos)
         self.create_subscription(Float64, "/sonar/front_left",   self.front_left_cb,   sonar_qos)
         self.create_subscription(Float64, "/sonar/front_right",  self.front_right_cb,  sonar_qos)
         self.create_subscription(Float64, "/sonar/back",         self.back_cb,         sonar_qos)
 
         self.corridor_centers  = [10.45, 8.50, 6.50, 4.50, 2.50, 0.55]
-        self.y_approach_bottom = 3.0
+        self.y_approach_bottom = 5.0
         self.y_approach_top    = 48.5
-        self.y_bottom_turn     = 4.5
+        self.y_bottom_turn     = 6.5
         self.y_top_turn        = 46.5
 
         self.waypoints  = self.generate_serpentine_waypoints()
@@ -126,33 +126,28 @@ class RobotanikRowFSM(Node):
         return waypoints
 
     # ── Sonar Callback'ler ───────────────────────────────────────
-    # ŞEFİN DÜZELTMESİ: Artık msg.range değil msg.data okunuyor!
     def front_center_cb(self, msg):
         try:
             self.front_center = float(msg.data)
         except Exception as e:
-            self.get_logger().warn(f"front_center okuma hatası: {e}")
             self.front_center = None
 
     def front_left_cb(self, msg):
         try:
             self.front_left = float(msg.data)
         except Exception as e:
-            self.get_logger().warn(f"front_left okuma hatası: {e}")
             self.front_left = None
 
     def front_right_cb(self, msg):
         try:
             self.front_right = float(msg.data)
         except Exception as e:
-            self.get_logger().warn(f"front_right okuma hatası: {e}")
             self.front_right = None
 
     def back_cb(self, msg):
         try:
             self.back = float(msg.data)
         except Exception as e:
-            self.get_logger().warn(f"back okuma hatası: {e}")
             self.back = None
 
     # ── Yardımcılar ──────────────────────────────────────────────
@@ -190,24 +185,15 @@ class RobotanikRowFSM(Node):
 
         if current_x not in self.skipped_corridors:
             self.skipped_corridors.append(current_x)
-            self.get_logger().warn(
-                f"KORİDOR {current_x:.2f} ENGELLİ → atlandı. "
-                f"Toplam atlanan: {len(self.skipped_corridors)}"
-            )
 
         for i in range(self.current_wp + 1, len(self.waypoints)):
             nx, ny, nyaw, ntype = self.waypoints[i]
             if abs(nx - current_x) > 0.5 and ntype == "NAV2":
                 self.current_wp = i
                 self.state = MissionState.SEND_GOAL
-                self.get_logger().warn(f"YENİ HEDEF KORİDOR: X={nx:.2f}, Y={ny:.2f}")
                 return
 
         if self.skipped_corridors:
-            self.get_logger().warn(
-                f"Ana koridorlar bitti. "
-                f"{len(self.skipped_corridors)} atlanan koridor taranıyor."
-            )
             self._append_skipped_corridor()
         else:
             self.get_logger().info("Tüm koridorlar tamamlandı.")
@@ -238,10 +224,6 @@ class RobotanikRowFSM(Node):
                 for wp in reversed(new_wps):
                     self.waypoints.insert(ins, wp)
 
-                self.get_logger().warn(
-                    f"Atlanan koridor X={skipped_x:.2f} listeye eklendi. "
-                    f"Kalan atlanan: {len(self.skipped_corridors)}"
-                )
                 self.state = MissionState.NEXT_WAYPOINT
                 return
 
@@ -282,7 +264,6 @@ class RobotanikRowFSM(Node):
         if self.send_goal_future.done():
             self.goal_handle = self.send_goal_future.result()
             if not self.goal_handle.accepted:
-                self.get_logger().warn("Hedef reddedildi → sonraki waypoint")
                 self.state = MissionState.NEXT_WAYPOINT
                 return
             self._goal_accepted_time = time.time()
@@ -342,12 +323,31 @@ class RobotanikRowFSM(Node):
             else:
                 self.obstacle_counter = 0
 
-            Kp    = 1.2
-            l_val = min(self.front_left  if self.front_left  and not math.isnan(self.front_left)  else 1.0, 1.0)
-            r_val = min(self.front_right if self.front_right and not math.isnan(self.front_right) else 1.0, 1.0)
-            error     = (l_val - r_val) / max(l_val + r_val, 0.1)
-            angular_z = max(-0.5, min(0.5, Kp * error))
-            self.publish_cmd_vel(0.18, angular_z)
+            # --- ŞEFİN V13.2 ÖRÜMCEK ADAM ÖNLEYİCİ MODU ---
+            l_raw = self.front_left
+            r_raw = self.front_right
+            
+            max_sensor_range = 1.5
+            l_val = min(l_raw if l_raw is not None and not math.isnan(l_raw) else max_sensor_range, max_sensor_range)
+            r_val = min(r_raw if r_raw is not None and not math.isnan(r_raw) else max_sensor_range, max_sensor_range)
+
+            # ACİL DURUM: Duvara 22 cm yaklaşırsa İLERİ GİTMEYİ KES, SADECE DÖN!
+            # Böylece tekerlek duvarı yakalayıp tırmanamaz.
+            if r_val < 0.22:
+                angular_z = 0.5   # Sola yumuşak dönüş
+                linear_x = 0.0    # SIFIR HIZ - İleri gitme!
+            elif l_val < 0.22:
+                angular_z = -0.5  # Sağa yumuşak dönüş
+                linear_x = 0.0    # SIFIR HIZ - İleri gitme!
+            else:
+                # NORMAL DURUM: Yumuşatılmış PID
+                Kp = 0.8  # Agresifliği 1.2'den 0.8'e düşürdük, yalpalama yapmasın
+                
+                error = (l_val - r_val) / max((l_val + r_val), 0.1)
+                angular_z = max(-0.4, min(0.4, Kp * error))
+                linear_x = 0.15
+
+            self.publish_cmd_vel(linear_x, angular_z)
 
             _, target_y, yaw, _ = self.waypoints[self.current_wp]
             going_up = (yaw > 0)
@@ -365,7 +365,6 @@ class RobotanikRowFSM(Node):
         elif self.state == MissionState.BACKUP:
             if not self.back_is_safe():
                 self.publish_stop()
-                self.get_logger().warn("Geri yol kapalı → koridoru atla")
                 self.skip_to_next_corridor()
                 return
             if time.time() - self.backup_start_time < self.backup_duration:
@@ -377,7 +376,6 @@ class RobotanikRowFSM(Node):
         elif self.state == MissionState.EVACUATE:
             if not self.back_is_safe():
                 if time.time() - self.evacuate_start_time > 10.0:
-                    self.get_logger().error("Arkadan sıkıştık → zorla atla")
                     self.skip_to_next_corridor()
                     return
                 self.publish_stop()
@@ -389,7 +387,6 @@ class RobotanikRowFSM(Node):
             if (yaw > 0  and self.current_y < self.y_approach_bottom + 0.5) or \
                (yaw < 0  and self.current_y > self.y_approach_top    - 0.5):
                 self.publish_stop()
-                self.get_logger().info("Koridordan çıkıldı → sonraki koridora")
                 self.skip_to_next_corridor()
 
         elif self.state == MissionState.NEXT_WAYPOINT:

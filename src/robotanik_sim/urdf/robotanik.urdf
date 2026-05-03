@@ -2,15 +2,14 @@
 <robot name="robotanik">
   <link name="base_footprint"/>
 
-  <!-- BASE_FOOTPRINT: Dosya2'nin hesaplanan z offset'i (0.215) -->
+  <!-- BASE_FOOTPRINT -->
   <joint name="base_footprint_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
     <origin xyz="0 0 0.215" rpy="0 0 0"/>
-    <!-- 0.215 = zemin + tekerlek yarıçapı(0.065) + gövde yarısı(0.15) -->
   </joint>
 
-  <!-- BASE_LINK: 40cm x 30cm gövde (0.325 yükseklik) + Dosya2 fizik parametreleri -->
+  <!-- BASE_LINK: 40cm x 30cm gövde -->
   <link name="base_link">
     <visual>
       <geometry>
@@ -26,7 +25,6 @@
       </geometry>
     </collision>
     <inertial>
-      <!-- Dosya2'den: daha iyi navigasyon için optimize edilmiş inertia -->
       <mass value="15.0"/>
       <inertia ixx="0.284" ixy="0" ixz="0" iyy="0.542" iyz="0" izz="0.638"/>
     </inertial>
@@ -35,7 +33,7 @@
     <material>Gazebo/Green</material>
   </gazebo>
 
-  <!-- SAĞ TEKERLEK: Dosya1 link ismi + geometri + Dosya2 mu değerleri -->
+  <!-- SAĞ TEKERLEK (Orijinal içerideki pozisyonu korundu) -->
   <link name="right_wheel">
     <visual>
       <geometry>
@@ -57,20 +55,19 @@
   </link>
   <gazebo reference="right_wheel">
     <material>Gazebo/Black</material>
-    <!-- Dosya2'den: daha iyi tutuş için artırılmış mu -->
     <mu1>1.5</mu1>
     <mu2>1.5</mu2>
   </gazebo>
 
-  <!-- Sağ tekerlek pozisyonu: 40x30cm gövdeye göre ayarlandı -->
   <joint name="right_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="right_wheel"/>
+    <!-- ŞEFİN İSTEĞİ: Tekerlekler tekrar gövdenin altına (Y=-0.121) alındı -->
     <origin xyz="-0.135 -0.121 -0.1525" rpy="1.5708 0 0"/>
     <axis xyz="0 0 -1"/>
   </joint>
 
-  <!-- SOL TEKERLEK: Dosya1 link ismi + geometri + Dosya2 mu değerleri -->
+  <!-- SOL TEKERLEK (Orijinal içerideki pozisyonu korundu) -->
   <link name="left_wheel">
     <visual>
       <geometry>
@@ -92,20 +89,19 @@
   </link>
   <gazebo reference="left_wheel">
     <material>Gazebo/Black</material>
-    <!-- Dosya2'den: daha iyi tutuş için artırılmış mu -->
     <mu1>1.5</mu1>
     <mu2>1.5</mu2>
   </gazebo>
 
-  <!-- Sol tekerlek pozisyonu: 40x30cm gövdeye göre ayarlandı -->
   <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="left_wheel"/>
+    <!-- ŞEFİN İSTEĞİ: Tekerlekler tekrar gövdenin altına (Y=0.121) alındı -->
     <origin xyz="-0.135 0.121 -0.1525" rpy="-1.5708 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
 
-  <!-- SAĞ CASTER: Dosya1 link ismi + orijinal sphere geometrisi korundu -->
+  <!-- SAĞ CASTER -->
   <link name="right_caster_wheel">
     <visual>
       <geometry>
@@ -131,14 +127,13 @@
     <mu2>0.0</mu2>
   </gazebo>
 
-  <!-- Dosya1 joint ismi + orijinal pozisyon korundu -->
   <joint name="right_caster_joint" type="fixed">
     <parent link="base_link"/>
     <child link="right_caster_wheel"/>
     <origin xyz="0.15 -0.10 -0.19" rpy="0 0 0"/>
   </joint>
 
-  <!-- SOL CASTER: Dosya1 link ismi + orijinal sphere geometrisi korundu -->
+  <!-- SOL CASTER -->
   <link name="left_caster_wheel">
     <visual>
       <geometry>
@@ -164,16 +159,13 @@
     <mu2>0.0</mu2>
   </gazebo>
 
-  <!-- Dosya1 joint ismi + orijinal pozisyon korundu -->
   <joint name="left_caster_joint" type="fixed">
     <parent link="base_link"/>
     <child link="left_caster_wheel"/>
     <origin xyz="0.15 0.10 -0.19" rpy="0 0 0"/>
   </joint>
 
-  <!-- ===== SONAR SENSÖRLER =====
-       Dosya1 link/joint isimleri + yatay pozisyonlar KORUNDU
-       Dosya2'den: z=0.05 offset (sensörler gövde üst yarısında, daha iyi algılama) -->
+  <!-- ===== SONAR SENSÖRLER (Şefin belirlediği Float64 Köprü Uyumlu) ===== -->
   <link name="sonar_front_center">
     <visual>
       <geometry><box size="0.02 0.04 0.02"/></geometry>
@@ -215,7 +207,6 @@
   <joint name="sonar_front_left_joint" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_front_left"/>
-    <!-- Y=0.125 (kenara 2.5cm), açı=40° (0.698 rad) -->
     <origin xyz="0.21 0.125 0.05" rpy="0 0 0.698"/>
   </joint>
   <gazebo reference="sonar_front_left">
@@ -248,7 +239,6 @@
   <joint name="sonar_front_right_joint" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_front_right"/>
-    <!-- Y=-0.125 (kenara 2.5cm), açı=-40° (-0.698 rad) -->
     <origin xyz="0.21 -0.125 0.05" rpy="0 0 -0.698"/>
   </joint>
   <gazebo reference="sonar_front_right">
@@ -281,7 +271,6 @@
   <joint name="sonar_back_joint" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_back"/>
-    <!-- X=-0.21 (yeni robot uzunluğu 40cm) -->
     <origin xyz="-0.21 0 0.05" rpy="0 0 3.14159"/>
   </joint>
   <gazebo reference="sonar_back">
@@ -305,21 +294,21 @@
     </sensor>
   </gazebo>
 
-  <!-- ===== DIFF DRIVE PLUGIN =====
-       Dosya1 joint isimleri (left/right_wheel_joint) korundu
-       wheel_separation: 30cm gövde genişliğine göre güncellendi (0.242) -->
+  <!-- ===== DIFF DRIVE PLUGIN ===== -->
   <gazebo>
     <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
       <update_rate>30</update_rate>
       <left_joint>left_wheel_joint</left_joint>
       <right_joint>right_wheel_joint</right_joint>
+      <!-- ŞEFİN İSTEĞİ: Tekerlekler tekrar içeride olduğu için mesafe (0.242) geri alındı -->
       <wheel_separation>0.242</wheel_separation>
       <wheel_diameter>0.130</wheel_diameter>
       <max_wheel_torque>20</max_wheel_torque>
       <max_wheel_acceleration>1.0</max_wheel_acceleration>
       <command_topic>cmd_vel</command_topic>
       <publish_odom>true</publish_odom>
-      <publish_odom_tf>true</publish_odom_tf>
+      <!-- EKF ile çakışmaması için KESİNLİKLE FALSE KALMALI -->
+      <publish_odom_tf>false</publish_odom_tf>
       <publish_wheel_tf>true</publish_wheel_tf>
       <odometry_topic>odom</odometry_topic>
       <odometry_frame>odom</odometry_frame>
